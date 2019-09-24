@@ -5,6 +5,7 @@ import { Store } from "@ngrx/store";
 import { State } from "src/app/store/reducers";
 import * as _ from "lodash";
 import { loadFormInfos } from "../../store/actions/forms.actions";
+import { getFormInfos } from "../../store/selectors/forms-info.selector";
 export interface PeriodicElement {
   name: string;
   position: number;
@@ -107,7 +108,7 @@ export class HomeComponent implements OnInit {
     status: "",
     colorKey: ""
   };
-  orgUnitFormsInfo$: Observable<any>;
+  formsInfo$: Observable<any>;
 
   constructor(private _snackBar: MatSnackBar, private store: Store<State>) {}
   ngOnInit() {}
@@ -120,6 +121,7 @@ export class HomeComponent implements OnInit {
 
   onOrgUnitUpdate(e, action) {
     this.store.dispatch(loadFormInfos({ ou: e.items[0].id }));
+    this.formsInfo$ = this.store.select(getFormInfos);
   }
 
   detailsOfTheChangedValue(e) {
