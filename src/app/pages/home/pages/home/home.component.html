@@ -1,62 +1,78 @@
 <div style="margin-top: 50px">
-  <div class="container">
-    <mat-tab-group>
-      <mat-tab label="Data entry">
-        <mat-chip-list aria-label="Fish selection">
-          <div class="row">
-            <div class="col-md-3">
-              <ngx-dhis2-org-unit-filter
-                [orgUnitFilterConfig]="orgUnitFilterConfig"
-                [selectedOrgUnitItems]="selectedOrgUnitItems"
-                (orgUnitUpdate)="onOrgUnitUpdate($event, 'UPDATE')"
-                (orgUnitClose)="onOrgUnitUpdate($event, 'CLOSE')"
-              >
-              </ngx-dhis2-org-unit-filter>
-            </div>
-            <div class="col-md-9">
-              <div *ngIf="formsInfoEntities$ | async">
-                <select
-                  class="form-control"
-                  (change)="
-                    getSelectedForm($event.target.value, formsInfoEntities$)
-                  "
-                >
-                  <option
-                    *ngFor="
-                      let form of (formsInfoEntities$ | async)[selectedOuId]
-                        ? (formsInfoEntities$ | async)[selectedOuId]['programs']
-                        : []
-                    "
-                    [value]="form.id"
-                    >{{ form.name }}</option
-                  >
-                </select>
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-md-2">
+        <ngx-dhis2-org-unit-filter
+          [orgUnitFilterConfig]="orgUnitFilterConfig"
+          [selectedOrgUnitItems]="selectedOrgUnitItems"
+          (orgUnitUpdate)="onOrgUnitUpdate($event, 'UPDATE')"
+          (orgUnitClose)="onOrgUnitUpdate($event, 'CLOSE')"
+        >
+        </ngx-dhis2-org-unit-filter>
+      </div>
+      <div class="col-md-10">
+        <div class="reports-and-data-entry">
+          <mat-tab-group>
+            <mat-tab label="Data entry">
+              <mat-chip-list aria-label="Fish selection">
+                <div class="row">
+                  <div class="col-md-12">
+                    <div *ngIf="formsInfoEntities$ | async">
+                      <select
+                        class="form-control"
+                        (change)="
+                          getSelectedForm(
+                            $event.target.value,
+                            formsInfoEntities$
+                          )
+                        "
+                      >
+                        <option
+                          *ngFor="
+                            let form of (formsInfoEntities$ | async)[
+                              selectedOuId
+                            ]
+                              ? (formsInfoEntities$ | async)[selectedOuId][
+                                  'programs'
+                                ]
+                              : []
+                          "
+                          [value]="form.id"
+                          >{{ form.name }}</option
+                        >
+                      </select>
+                    </div>
+                    <div style="width: 100%" *ngIf="!selectedFormReady"></div>
+                    <div *ngIf="selectedFormReady">
+                      <ngx-dhis2-custom-forms-entry
+                        [htmlCustomForm]="htmlCustomForm"
+                        [dataElements]="dataElements"
+                        [formType]="formType"
+                        (onCustomFormInputChange)="
+                          detailsOfTheChangedValue($event)
+                        "
+                        [statusUpdateOnDomElement]="statusArr"
+                      >
+                      </ngx-dhis2-custom-forms-entry>
+                    </div>
+                  </div>
+                </div>
+              </mat-chip-list>
+            </mat-tab>
+            <mat-tab label="Reports">
+              Reports
+              <div *ngIf="formsInfo$ | async">
+                {{
+                  (formsInfoEntities$ | async)[selectedOuId]
+                    ? (formsInfoEntities$ | async)[selectedOuId]["programs"]
+                    : []
+                }}
               </div>
-              <div>
-                <ngx-dhis2-custom-forms-entry
-                  [htmlCustomForm]="htmlCustomForm"
-                  [dataElements]="dataElements"
-                  [formType]="formType"
-                  (onCustomFormInputChange)="detailsOfTheChangedValue($event)"
-                  [statusUpdateOnDomElement]="statusArr"
-                >
-                </ngx-dhis2-custom-forms-entry>
-              </div>
-            </div>
-          </div>
-        </mat-chip-list>
-      </mat-tab>
-      <mat-tab label="Reports">
-        Reports
-        <div *ngIf="formsInfo$ | async">
-          {{
-            (formsInfoEntities$ | async)[selectedOuId]
-              ? (formsInfoEntities$ | async)[selectedOuId]["programs"]
-              : []
-          }}
+            </mat-tab>
+          </mat-tab-group>
         </div>
-      </mat-tab>
-    </mat-tab-group>
+      </div>
+    </div>
     <div class="row">
       <div class="col-12">
         <h2>UI Components</h2>

@@ -9,3 +9,7 @@
 .example-container > * {
   width: 100%;
 }
+
+.reports-and-data-entry {
+  padding: 15px;
+}

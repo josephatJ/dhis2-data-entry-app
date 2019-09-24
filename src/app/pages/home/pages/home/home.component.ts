@@ -149,7 +149,7 @@ export class HomeComponent implements OnInit {
     allForms.subscribe(forms => {
       _.map(forms[this.selectedOuId]["programs"], (form: any) => {
         if (form.id == selectedFormId) {
-          console.log("form", form);
+          this.selectedFormReady = true;
         }
       });
     });
