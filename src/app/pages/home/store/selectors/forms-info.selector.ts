@@ -1,10 +1,7 @@
-import { MemoizedSelector, createFeatureSelector } from "@ngrx/store";
+import { createFeatureSelector } from "@ngrx/store";
 import { FormsInfoState, formsAdapter } from "../states/forms.states";
 
-const getFormInfosState: MemoizedSelector<
-  object,
-  FormsInfoState
-> = createFeatureSelector<FormsInfoState>("formInfos");
+const getFormInfosState = createFeatureSelector<FormsInfoState>("formInfos");
 
 export const {
   selectEntities: getFormEntities,
