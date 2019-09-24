@@ -1,6 +1,10 @@
 import { Component, OnInit } from "@angular/core";
 import { MatSnackBar } from "@angular/material/snack-bar";
 import { Observable } from "rxjs";
+import { Store } from "@ngrx/store";
+import { State } from "src/app/store/reducers";
+import * as _ from "lodash";
+import { loadFormInfos } from "../../store/actions/forms.actions";
 export interface PeriodicElement {
   name: string;
   position: number;
@@ -103,14 +107,19 @@ export class HomeComponent implements OnInit {
     status: "",
     colorKey: ""
   };
+  orgUnitFormsInfo$: Observable<any>;
 
-  constructor(private _snackBar: MatSnackBar) {}
+  constructor(private _snackBar: MatSnackBar, private store: Store<State>) {}
   ngOnInit() {}
 
   openSnackBar() {
     this._snackBar.open("This is working", "OK", {
       duration: 2000
     });
+  }
+
+  onOrgUnitUpdate(e, action) {
+    this.store.dispatch(loadFormInfos({ ou: e.items[0].id }));
   }
 
   detailsOfTheChangedValue(e) {

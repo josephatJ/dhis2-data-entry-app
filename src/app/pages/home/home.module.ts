@@ -7,6 +7,9 @@ import { pages } from "./pages";
 
 import { NgxDhis2CustomFormsEntryModule } from "ngx-dhis2-custom-forms-entry";
 import { NgxDhis2OrgUnitFilterModule } from "@iapps/ngx-dhis2-org-unit-filter";
+import { homeReducers } from "./store/reducers";
+import { EffectsModule } from "@ngrx/effects";
+import { FormsEffects } from "./store/effects";
 
 @NgModule({
   declarations: [...pages],
@@ -15,7 +18,9 @@ import { NgxDhis2OrgUnitFilterModule } from "@iapps/ngx-dhis2-org-unit-filter";
     SharedModule,
     HomeRoutingModule,
     NgxDhis2OrgUnitFilterModule,
-    NgxDhis2CustomFormsEntryModule
+    NgxDhis2CustomFormsEntryModule,
+    ...homeReducers,
+    EffectsModule.forFeature([FormsEffects])
   ]
 })
 export class HomeModule {}
