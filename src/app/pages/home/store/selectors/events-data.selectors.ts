@@ -8,7 +8,7 @@ const getEventsDataState = createFeatureSelector<EventsDataState>("eventsData");
 
 export const {
   selectEntities: getEventsDataEntities,
-  selectAll: getAllData
+  selectAll: getAllEventsData
 } = eventsDataAdapter.getSelectors(getEventsDataState);
 
 export const getEventsDataLoadingState = createSelector(
