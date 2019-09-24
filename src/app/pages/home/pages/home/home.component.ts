@@ -47,62 +47,12 @@ export class HomeComponent implements OnInit {
     showOrgUnitGroupSection: false,
     showOrgUnitLevelSection: false
   };
-  selectedOrgUnitItems: any[] = [{ id: "O6uvpzGd5pu", name: "Bo", level: 2 }];
+  selectedOrgUnitItems: any[] = [
+    { id: "To5ATasBZMu", name: "AGA KHAN HEALTH CENTER", level: 4 }
+  ];
   dataSource = ELEMENT_DATA;
   pageEvent: any;
-  dataElements = [
-    {
-      name: "Testing long text dataelement tracker",
-      id: "zZtyRZUfG2Y",
-      valueType: "LONG_TEXT"
-    },
-    {
-      name: "Testing number data element tracker",
-      id: "B9eHqRhpnPw",
-      valueType: "NUMBER"
-    },
-    {
-      name: "Testing option set dataelement tracker",
-      id: "PGfbYUFddzH",
-      valueType: "TEXT",
-      optionSet: {
-        name: "Testing option set",
-        id: "NOthbW9JKkJ",
-        options: [
-          {
-            code: "Option 1",
-            name: "Option 1",
-            id: "t8K5lrgTAlO"
-          },
-          {
-            code: "Option 2",
-            name: "Option 2",
-            id: "UVs0yEN4Fi0"
-          },
-          {
-            code: "Yes",
-            name: "Yes Option",
-            id: "CBZBKtd91yG"
-          },
-          {
-            code: "No",
-            name: "No Option",
-            id: "ObNFCQ6tA9T"
-          }
-        ]
-      }
-    },
-    {
-      name: "Testing postive integer dataelement tracker",
-      id: "QBrj6pw4Jxc",
-      valueType: "INTEGER_ZERO_OR_POSITIVE"
-    },
-    {
-      name: "Testing text dataelement tracker",
-      id: "QSLEfRfa8p9",
-      valueType: "TEXT"
-    }
-  ];
+  dataElements = [];
   formType: string = "event";
   htmlCustomForm: any = "";
   statusArr = [];
@@ -129,6 +79,7 @@ export class HomeComponent implements OnInit {
   }
 
   onOrgUnitUpdate(e, action) {
+    this.selectedFormReady = false;
     this.selectedOuId = e.items[0].id;
     this.store.dispatch(loadFormInfos({ ou: e.items[0].id }));
     this.formsInfoEntities$ = this.store.select(getFormEntities);
@@ -159,8 +110,14 @@ export class HomeComponent implements OnInit {
           this.selectedFormReady = true;
           // load data for the selected form
           let dxDimensionString = "&dimension=";
+          let checkCount = 0;
           _.map(this.dataElements, dataElement => {
-            dxDimensionString += dataElement.id + "&dimension=";
+            checkCount++;
+            if (checkCount < this.dataElements.length) {
+              dxDimensionString += dataElement.id + "&dimension=";
+            } else {
+              dxDimensionString += dataElement.id;
+            }
           });
           const dimensions = {
             ou: this.selectedOuId,
