@@ -11,6 +11,11 @@ import {
   getLoadingState
 } from "../../store/selectors/forms-info.selector";
 import { loadEvents } from "../../store/actions/event-analytics.actions";
+import {
+  getAllEventsData,
+  getEventsDataEntities
+} from "../../store/selectors/events-data.selectors";
+import { drawTable } from "../../helpers/draw-table.helpers";
 export interface PeriodicElement {
   name: string;
   position: number;
@@ -67,7 +72,11 @@ export class HomeComponent implements OnInit {
   formsInfo$: Observable<any>;
   formsInfoEntities$: Observable<any>;
   loadedEvents$: Observable<any>;
+  loadedEventEntities$: Observable<any>;
   loaded$: Observable<any>;
+  tableConfigurations: any;
+  tableObject: any = {};
+  elementsToShow = ["created"];
 
   constructor(private _snackBar: MatSnackBar, private store: Store<State>) {}
   ngOnInit() {}
@@ -126,7 +135,31 @@ export class HomeComponent implements OnInit {
             pe: "THIS_YEAR",
             dx: dxDimensionString
           };
+          this.tableConfigurations = {
+            title: form.name,
+            subtitle: "",
+            showHierarchy: false,
+            displayList: false,
+            rows: ["ou"],
+            columns: ["dx"],
+            legendSet: null,
+            styles: null
+          };
           this.store.dispatch(loadEvents({ dimensions: dimensions }));
+          this.loadedEvents$ = this.store.select(getAllEventsData);
+          this.loadedEventEntities$ = this.store.select(getEventsDataEntities);
+          this.loadedEventEntities$.subscribe(entities => {
+            const key =
+              this.selectedOuId + "-" + "THIS_YEAR" + "-" + selectedFormId;
+            if (entities && entities[key]) {
+              this.tableObject = drawTable(
+                entities[key]["data"] ? entities[key]["data"] : {},
+                this.tableConfigurations,
+                this.elementsToShow,
+                this.selectedOuId
+              )[this.selectedOuId];
+            }
+          });
         }
       });
     });
@@ -136,6 +169,7 @@ export class HomeComponent implements OnInit {
     let formattedDataElements = [];
     _.map(programStageDataElements, PStageDataElement => {
       formattedDataElements.push(PStageDataElement.dataElement);
+      this.elementsToShow.push(PStageDataElement.dataElement.id);
     });
     return formattedDataElements;
   }

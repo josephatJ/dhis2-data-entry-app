@@ -21,7 +21,19 @@ export class EventsDataEffects {
       ofType(loadEvents),
       switchMap(action =>
         this.eventsDataService.getEventsData(action.dimensions).pipe(
-          map(data => addLoadedEvents({ eventsData: data })),
+          map(data =>
+            addLoadedEvents({
+              eventsData: {
+                id:
+                  action.dimensions.ou +
+                  "-" +
+                  action.dimensions.pe +
+                  "-" +
+                  action.dimensions.program,
+                data: data
+              }
+            })
+          ),
           catchError(error => of(loadingEventsDataFail({ error })))
         )
       )

@@ -10,9 +10,10 @@ import { NgxDhis2OrgUnitFilterModule } from "@iapps/ngx-dhis2-org-unit-filter";
 import { homeReducers } from "./store/reducers";
 import { EffectsModule } from "@ngrx/effects";
 import { FormsEffects, EventsDataEffects } from "./store/effects";
+import { ReportTableComponent } from './pages/home/report-table/report-table.component';
 
 @NgModule({
-  declarations: [...pages],
+  declarations: [...pages, ReportTableComponent],
   imports: [
     CommonModule,
     SharedModule,

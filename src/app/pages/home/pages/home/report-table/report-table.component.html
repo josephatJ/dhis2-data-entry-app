@@ -1,0 +1,39 @@
+<div>
+  <div *ngIf="tableObject" style="padding: 3px">
+    <table
+      class="table table-bordered table-condensed custom-table"
+      *ngIf="tableObject.rows.length != 0"
+    >
+      <thead>
+        <tr class="header-column">
+          <th>SN</th>
+          <th
+            *ngFor="let table_column of tableObject.titles.columns"
+            style="text-align: left"
+          >
+            <span>
+              {{ table_column.title }}
+            </span>
+          </th>
+        </tr>
+      </thead>
+      <tbody id="myPivotTable">
+        <tr
+          *ngFor="let rowItems of tableObject.rows; index as count"
+          [ngClass]="{ 'grey-background': count % 2 == 1 }"
+          style="text-align: left"
+        >
+          <td>{{ count + 1 }}</td>
+          <td
+            *ngFor="let header_column of rowItems; let i = index"
+            style="text-align: left;"
+            [attr.rowspan]="header_column.row_span"
+            [style.background]="header_column.color"
+          >
+            {{ header_column.value }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

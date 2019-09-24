@@ -71,12 +71,13 @@
             </mat-tab>
             <mat-tab label="Reports">
               Reports
-              <div *ngIf="formsInfo$ | async">
-                {{
-                  (formsInfoEntities$ | async)[selectedOuId]
-                    ? (formsInfoEntities$ | async)[selectedOuId]["programs"]
-                    : []
-                }}
+              <div *ngIf="loadedEvents$ | async">
+                <app-report-table
+                  *ngIf="tableObject && tableObject['rows']"
+                  [tableObject]="
+                    tableObject['rows'] ? tableObject : { rows: [] }
+                  "
+                ></app-report-table>
               </div>
             </mat-tab>
           </mat-tab-group>
