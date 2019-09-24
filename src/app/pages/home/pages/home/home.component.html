@@ -15,9 +15,12 @@
           <mat-tab-group>
             <mat-tab label="Data entry">
               <mat-chip-list aria-label="Fish selection">
-                <div class="row">
+                <div class="row" style="width: 100%">
                   <div class="col-md-12">
-                    <div *ngIf="formsInfoEntities$ | async">
+                    <div
+                      *ngIf="formsInfoEntities$ | async"
+                      class="form-selection"
+                    >
                       <select
                         class="form-control"
                         (change)="
@@ -42,8 +45,15 @@
                         >
                       </select>
                     </div>
+                    <div style="width: 100%" *ngIf="!(loaded$ | async)">
+                      <div class="mb-5">
+                        <mat-progress-bar
+                          mode="indeterminate"
+                        ></mat-progress-bar>
+                      </div>
+                    </div>
                     <div style="width: 100%" *ngIf="!selectedFormReady"></div>
-                    <div *ngIf="selectedFormReady">
+                    <div *ngIf="selectedFormReady" style="margin-left: 10px;">
                       <ngx-dhis2-custom-forms-entry
                         [htmlCustomForm]="htmlCustomForm"
                         [dataElements]="dataElements"

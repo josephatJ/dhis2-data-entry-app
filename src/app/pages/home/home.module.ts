@@ -9,7 +9,7 @@ import { NgxDhis2CustomFormsEntryModule } from "ngx-dhis2-custom-forms-entry";
 import { NgxDhis2OrgUnitFilterModule } from "@iapps/ngx-dhis2-org-unit-filter";
 import { homeReducers } from "./store/reducers";
 import { EffectsModule } from "@ngrx/effects";
-import { FormsEffects } from "./store/effects";
+import { FormsEffects, EventsDataEffects } from "./store/effects";
 
 @NgModule({
   declarations: [...pages],
@@ -20,7 +20,7 @@ import { FormsEffects } from "./store/effects";
     NgxDhis2OrgUnitFilterModule,
     NgxDhis2CustomFormsEntryModule,
     ...homeReducers,
-    EffectsModule.forFeature([FormsEffects])
+    EffectsModule.forFeature([FormsEffects, EventsDataEffects])
   ]
 })
 export class HomeModule {}

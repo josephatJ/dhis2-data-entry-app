@@ -7,8 +7,10 @@ import * as _ from "lodash";
 import { loadFormInfos } from "../../store/actions/forms.actions";
 import {
   getFormInfos,
-  getFormEntities
+  getFormEntities,
+  getLoadingState
 } from "../../store/selectors/forms-info.selector";
+import { loadEvents } from "../../store/actions/event-analytics.actions";
 export interface PeriodicElement {
   name: string;
   position: number;
@@ -102,8 +104,7 @@ export class HomeComponent implements OnInit {
     }
   ];
   formType: string = "event";
-  htmlCustomForm: any =
-    '<style type="text/css">.main-header{\n\t\tbackground-color:#ececec;\n\t\t}\n\t.sub-header{\n\t\tbackground-color:#C3E5FB;\n\t\t}\n\ttd input {\n    display: block;\n    width: 100%;\n    height: 34px;\n    padding: 6px 12px;\n    font-size: 14px;\n    line-height: 1.428571429;\n    color: #555;\n    vertical-align: middle;\n    background-color: #fff;\n    background-image: none;\n    border: 1px solid #ccc;\n    border-radius: 4px;\n    -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,0.075);\n    box-shadow: inset 0 1px 1px rgba(0,0,0,0.075);\n    -webkit-transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;\n    transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;\n}\n</style>\n<div class="cde" id="opd">\n<table class="table table-condensed table-bordered table-responsive">\n\t<thead>\n\t\t<tr>\n\t\t\t<th class="main-header" colspan="4">Testing custom event form</th>\n\t\t</tr>\n\t</thead>\n\t<tbody>\n\t\t<tr class="sub-header">\n\t\t\t<td>A</td>\n\t\t\t<td colspan="3">Header 1</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>1</td>\n\t\t\t<td>Number data element</td>\n\t\t\t<td colspan="2"><input id="Ny8qhGGKa9Z-B9eHqRhpnPw-val" name="entryfield" title="Testing number data element tracker" value="[ Testing number data element tracker ]"/></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>2</td>\n\t\t\t<td>Positive integer data element</td>\n\t\t\t<td colspan="2"><input id="Ny8qhGGKa9Z-QBrj6pw4Jxc-val" name="entryfield" title="Testing postive integer dataelement tracker" value="[ Testing postive integer dataelement tracker ]"/></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>3</td>\n\t\t\t<td>Text data element</td>\n\t\t\t<td colspan="2"><input id="Ny8qhGGKa9Z-QSLEfRfa8p9-val" name="entryfield" title="Testing text dataelement tracker" value="[ Testing text dataelement tracker ]"/></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>4</td>\n\t\t\t<td>Long text data element</td>\n\t\t\t<td colspan="2"><input id="Ny8qhGGKa9Z-zZtyRZUfG2Y-val" name="entryfield" title="Testing long text dataelement tracker" value="[ Testing long text dataelement tracker ]"/></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>5</td>\n\t\t\t<td>Option set based data element</td>\n\t\t\t<td colspan="2"><input id="Ny8qhGGKa9Z-PGfbYUFddzH-val" name="entryfield" title="Testing option set dataelement tracker" value="[ Testing option set dataelement tracker ]"/></td>\n\t\t</tr>\n\t</tbody>\n</table>\n</div>\n';
+  htmlCustomForm: any = "";
   statusArr = [];
   statusUpdateOnDomElement = {
     domElementId: "",
@@ -115,6 +116,8 @@ export class HomeComponent implements OnInit {
   selectedOuId: string;
   formsInfo$: Observable<any>;
   formsInfoEntities$: Observable<any>;
+  loadedEvents$: Observable<any>;
+  loaded$: Observable<any>;
 
   constructor(private _snackBar: MatSnackBar, private store: Store<State>) {}
   ngOnInit() {}
@@ -130,10 +133,10 @@ export class HomeComponent implements OnInit {
     this.store.dispatch(loadFormInfos({ ou: e.items[0].id }));
     this.formsInfoEntities$ = this.store.select(getFormEntities);
     this.formsInfo$ = this.store.select(getFormInfos);
+    this.loaded$ = this.store.select(getLoadingState);
   }
 
   detailsOfTheChangedValue(e) {
-    console.log("on your app", e);
     const domElementId = e.domElementId;
     this.statusUpdateOnDomElement.domElementId = e.domElementId;
     this.statusUpdateOnDomElement.id = e.id;
@@ -149,10 +152,34 @@ export class HomeComponent implements OnInit {
     allForms.subscribe(forms => {
       _.map(forms[this.selectedOuId]["programs"], (form: any) => {
         if (form.id == selectedFormId) {
+          this.htmlCustomForm = form["programStages"][0].dataEntryForm.htmlCode;
+          this.dataElements = this.getDataElements(
+            form["programStages"][0]["programStageDataElements"]
+          );
           this.selectedFormReady = true;
+          // load data for the selected form
+          let dxDimensionString = "&dimension=";
+          _.map(this.dataElements, dataElement => {
+            dxDimensionString += dataElement.id + "&dimension=";
+          });
+          const dimensions = {
+            ou: this.selectedOuId,
+            program: selectedFormId,
+            stage: form["programStages"][0].id,
+            pe: "THIS_YEAR",
+            dx: dxDimensionString
+          };
+          this.store.dispatch(loadEvents({ dimensions: dimensions }));
         }
       });
     });
-    console.log(selectedFormId);
+  }
+
+  getDataElements(programStageDataElements) {
+    let formattedDataElements = [];
+    _.map(programStageDataElements, PStageDataElement => {
+      formattedDataElements.push(PStageDataElement.dataElement);
+    });
+    return formattedDataElements;
   }
 }
