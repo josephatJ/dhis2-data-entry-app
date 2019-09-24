@@ -5,7 +5,10 @@ import { Store } from "@ngrx/store";
 import { State } from "src/app/store/reducers";
 import * as _ from "lodash";
 import { loadFormInfos } from "../../store/actions/forms.actions";
-import { getFormInfos } from "../../store/selectors/forms-info.selector";
+import {
+  getFormInfos,
+  getFormEntities
+} from "../../store/selectors/forms-info.selector";
 export interface PeriodicElement {
   name: string;
   position: number;
@@ -108,7 +111,10 @@ export class HomeComponent implements OnInit {
     status: "",
     colorKey: ""
   };
+  selectedFormReady: boolean = false;
+  selectedOuId: string;
   formsInfo$: Observable<any>;
+  formsInfoEntities$: Observable<any>;
 
   constructor(private _snackBar: MatSnackBar, private store: Store<State>) {}
   ngOnInit() {}
@@ -120,7 +126,9 @@ export class HomeComponent implements OnInit {
   }
 
   onOrgUnitUpdate(e, action) {
+    this.selectedOuId = e.items[0].id;
     this.store.dispatch(loadFormInfos({ ou: e.items[0].id }));
+    this.formsInfoEntities$ = this.store.select(getFormEntities);
     this.formsInfo$ = this.store.select(getFormInfos);
   }
 
@@ -134,5 +142,17 @@ export class HomeComponent implements OnInit {
     const newObject = {};
     newObject[domElementId] = this.statusUpdateOnDomElement;
     this.statusArr.push(this.statusUpdateOnDomElement);
+  }
+
+  getSelectedForm(selectedFormId, allForms: Observable<any>) {
+    this.selectedFormReady = false;
+    allForms.subscribe(forms => {
+      _.map(forms[this.selectedOuId]["programs"], (form: any) => {
+        if (form.id == selectedFormId) {
+          console.log("form", form);
+        }
+      });
+    });
+    console.log(selectedFormId);
   }
 }

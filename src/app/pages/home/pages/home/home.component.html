@@ -14,6 +14,24 @@
               </ngx-dhis2-org-unit-filter>
             </div>
             <div class="col-md-9">
+              <div *ngIf="formsInfoEntities$ | async">
+                <select
+                  class="form-control"
+                  (change)="
+                    getSelectedForm($event.target.value, formsInfoEntities$)
+                  "
+                >
+                  <option
+                    *ngFor="
+                      let form of (formsInfoEntities$ | async)[selectedOuId]
+                        ? (formsInfoEntities$ | async)[selectedOuId]['programs']
+                        : []
+                    "
+                    [value]="form.id"
+                    >{{ form.name }}</option
+                  >
+                </select>
+              </div>
               <div>
                 <ngx-dhis2-custom-forms-entry
                   [htmlCustomForm]="htmlCustomForm"
@@ -28,7 +46,16 @@
           </div>
         </mat-chip-list>
       </mat-tab>
-      <mat-tab label="Reports"> Reports</mat-tab>
+      <mat-tab label="Reports">
+        Reports
+        <div *ngIf="formsInfo$ | async">
+          {{
+            (formsInfoEntities$ | async)[selectedOuId]
+              ? (formsInfoEntities$ | async)[selectedOuId]["programs"]
+              : []
+          }}
+        </div>
+      </mat-tab>
     </mat-tab-group>
     <div class="row">
       <div class="col-12">
