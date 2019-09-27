@@ -53,7 +53,7 @@ export class HomeComponent implements OnInit {
     showOrgUnitLevelSection: false
   };
   selectedOrgUnitItems: any[] = [
-    { id: "To5ATasBZMu", name: "AGA KHAN HEALTH CENTER", level: 4 }
+    { id: "WoDcP1GEqm3", name: "Buguruni Mills", level: 4 }
   ];
   dataSource = ELEMENT_DATA;
   pageEvent: any;
@@ -77,6 +77,9 @@ export class HomeComponent implements OnInit {
   tableConfigurations: any;
   tableObject: any = {};
   elementsToShow = ["created"];
+  isEvent: boolean = false;
+  isAggregate: boolean = false;
+  isTracker: boolean = false;
 
   constructor(private _snackBar: MatSnackBar, private store: Store<State>) {}
   ngOnInit() {}
@@ -110,12 +113,24 @@ export class HomeComponent implements OnInit {
   getSelectedForm(selectedFormId, allForms: Observable<any>) {
     this.selectedFormReady = false;
     allForms.subscribe(forms => {
-      _.map(forms[this.selectedOuId]["programs"], (form: any) => {
+      let key = "";
+      if (this.isAggregate) {
+        key = "dataSets";
+      } else {
+        key = "programs";
+      }
+      _.map(forms[this.selectedOuId][key], (form: any) => {
         if (form.id == selectedFormId) {
-          this.htmlCustomForm = form["programStages"][0].dataEntryForm.htmlCode;
-          this.dataElements = this.getDataElements(
-            form["programStages"][0]["programStageDataElements"]
-          );
+          if (this.isEvent) {
+            this.htmlCustomForm =
+              form["programStages"][0].dataEntryForm.htmlCode;
+            this.dataElements = this.getDataElements(
+              form["programStages"][0]["programStageDataElements"]
+            );
+          } else if (this.isAggregate) {
+            this.htmlCustomForm = form.dataEntryForm.htmlCode;
+            this.dataElements = this.getDataElements(form.dataSetElements);
+          }
           this.selectedFormReady = true;
           // load data for the selected form
           let dxDimensionString = "&dimension=";
@@ -172,5 +187,22 @@ export class HomeComponent implements OnInit {
       this.elementsToShow.push(PStageDataElement.dataElement.id);
     });
     return formattedDataElements;
+  }
+
+  setFormType(type) {
+    this.selectedFormReady = false;
+    if (type == "event") {
+      this.isEvent = true;
+      this.isAggregate = false;
+      this.isTracker = false;
+    } else if (type == "aggregate") {
+      this.isEvent = false;
+      this.isAggregate = true;
+      this.isTracker = false;
+    } else if (type == "tracker") {
+      this.isEvent = false;
+      this.isAggregate = false;
+      this.isTracker = true;
+    }
   }
 }

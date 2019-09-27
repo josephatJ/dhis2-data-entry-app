@@ -5,12 +5,12 @@ import { HomeRoutingModule } from "./home-routing.module";
 import { SharedModule } from "src/app/shared/shared.module";
 import { pages } from "./pages";
 
-import { NgxDhis2CustomFormsEntryModule } from "ngx-dhis2-custom-forms-entry";
+import { NgxDhis2CustomFormsEntryModule } from "@josephatj/ngx-dhis2-custom-forms-entry";
 import { NgxDhis2OrgUnitFilterModule } from "@iapps/ngx-dhis2-org-unit-filter";
 import { homeReducers } from "./store/reducers";
 import { EffectsModule } from "@ngrx/effects";
 import { FormsEffects, EventsDataEffects } from "./store/effects";
-import { ReportTableComponent } from './pages/home/report-table/report-table.component';
+import { ReportTableComponent } from "./pages/home/report-table/report-table.component";
 
 @NgModule({
   declarations: [...pages, ReportTableComponent],
