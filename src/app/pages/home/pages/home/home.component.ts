@@ -16,6 +16,7 @@ import {
   getEventsDataEntities
 } from "../../store/selectors/events-data.selectors";
 import { drawTable } from "../../helpers/draw-table.helpers";
+import { NgxDhis2HttpClientService } from "@iapps/ngx-dhis2-http-client";
 export interface PeriodicElement {
   name: string;
   position: number;
@@ -59,6 +60,7 @@ export class HomeComponent implements OnInit {
   pageEvent: any;
   dataElements = [];
   formType: string = "event";
+  formId: string;
   htmlCustomForm: any = "";
   statusArr = [];
   statusUpdateOnDomElement = {
@@ -80,8 +82,19 @@ export class HomeComponent implements OnInit {
   isEvent: boolean = false;
   isAggregate: boolean = false;
   isTracker: boolean = false;
+  orgUnitFormsInfo$: Observable<any>;
+  dataEntryConfigurations$: Observable<any>;
+  formAttribute: string = "";
 
-  constructor(private _snackBar: MatSnackBar, private store: Store<State>) {}
+  constructor(
+    private _snackBar: MatSnackBar,
+    private store: Store<State>,
+    private httpClientService: NgxDhis2HttpClientService
+  ) {
+    this.dataEntryConfigurations$ = this.httpClientService.get(
+      "dataStore/data-entry/configurations"
+    );
+  }
   ngOnInit() {}
 
   openSnackBar() {
@@ -97,6 +110,11 @@ export class HomeComponent implements OnInit {
     this.formsInfoEntities$ = this.store.select(getFormEntities);
     this.formsInfo$ = this.store.select(getFormInfos);
     this.loaded$ = this.store.select(getLoadingState);
+    this.orgUnitFormsInfo$ = this.httpClientService.get(
+      "organisationUnits/" +
+        e.items[0].id +
+        ".json?fields=id,name,dataSets[id,name,dataSetElements[dataElement[id,name,valueType,optionSetValue]],dataEntryForm[id,name,htmlCode]],programs[id,name,programStages[dataEntryForm[id,htmlCode],programStageDataElements[dataElement[id,name,code,valueType,optionSet[id,name,options[id,name,code]]]]]]"
+    );
   }
 
   detailsOfTheChangedValue(e) {
@@ -108,29 +126,45 @@ export class HomeComponent implements OnInit {
     const newObject = {};
     newObject[domElementId] = this.statusUpdateOnDomElement;
     this.statusArr.push(this.statusUpdateOnDomElement);
+    console.log("statusUpdateOnDomElement", e);
   }
 
-  getSelectedForm(selectedFormId, allForms: Observable<any>) {
+  getSelectedAggregateForm(selectedFormId) {
     this.selectedFormReady = false;
-    allForms.subscribe(forms => {
-      let key = "";
-      if (this.isAggregate) {
-        key = "dataSets";
-      } else {
-        key = "programs";
-      }
-      _.map(forms[this.selectedOuId][key], (form: any) => {
+    this.formType = "aggregate";
+    this.orgUnitFormsInfo$.subscribe(info => {
+      _.map(info.dataSets, dataSet => {
+        if (dataSet.id == selectedFormId) {
+          this.dataEntryConfigurations$.subscribe(entryConfigs => {
+            if (entryConfigs && entryConfigs[selectedFormId]) {
+              this.selectedFormReady = false;
+            } else {
+              this.selectedFormReady = true;
+            }
+          });
+          this.formId = selectedFormId;
+          this.htmlCustomForm = dataSet.dataEntryForm.htmlCode;
+          this.dataElements = this.getDataElements(dataSet.dataSetElements);
+        }
+      });
+    });
+  }
+
+  getFormAttribute(attributeId) {
+    this.formAttribute = attributeId;
+    this.selectedFormReady = true;
+  }
+
+  getSelectedForm(selectedFormId) {
+    this.selectedFormReady = false;
+    this.orgUnitFormsInfo$.subscribe(forms => {
+      _.map(forms["programs"], (form: any) => {
         if (form.id == selectedFormId) {
-          if (this.isEvent) {
-            this.htmlCustomForm =
-              form["programStages"][0].dataEntryForm.htmlCode;
-            this.dataElements = this.getDataElements(
-              form["programStages"][0]["programStageDataElements"]
-            );
-          } else if (this.isAggregate) {
-            this.htmlCustomForm = form.dataEntryForm.htmlCode;
-            this.dataElements = this.getDataElements(form.dataSetElements);
-          }
+          this.formId = selectedFormId;
+          this.htmlCustomForm = form["programStages"][0].dataEntryForm.htmlCode;
+          this.dataElements = this.getDataElements(
+            form["programStages"][0]["programStageDataElements"]
+          );
           this.selectedFormReady = true;
           // load data for the selected form
           let dxDimensionString = "&dimension=";
@@ -143,38 +177,42 @@ export class HomeComponent implements OnInit {
               dxDimensionString += dataElement.id;
             }
           });
-          const dimensions = {
-            ou: this.selectedOuId,
-            program: selectedFormId,
-            stage: form["programStages"][0].id,
-            pe: "THIS_YEAR",
-            dx: dxDimensionString
-          };
-          this.tableConfigurations = {
-            title: form.name,
-            subtitle: "",
-            showHierarchy: false,
-            displayList: false,
-            rows: ["ou"],
-            columns: ["dx"],
-            legendSet: null,
-            styles: null
-          };
-          this.store.dispatch(loadEvents({ dimensions: dimensions }));
-          this.loadedEvents$ = this.store.select(getAllEventsData);
-          this.loadedEventEntities$ = this.store.select(getEventsDataEntities);
-          this.loadedEventEntities$.subscribe(entities => {
-            const key =
-              this.selectedOuId + "-" + "THIS_YEAR" + "-" + selectedFormId;
-            if (entities && entities[key]) {
-              this.tableObject = drawTable(
-                entities[key]["data"] ? entities[key]["data"] : {},
-                this.tableConfigurations,
-                this.elementsToShow,
-                this.selectedOuId
-              )[this.selectedOuId];
-            }
-          });
+          if (this.isEvent) {
+            const dimensions = {
+              ou: this.selectedOuId,
+              program: selectedFormId,
+              stage: form["programStages"][0].id,
+              pe: "THIS_YEAR",
+              dx: dxDimensionString
+            };
+            this.tableConfigurations = {
+              title: form.name,
+              subtitle: "",
+              showHierarchy: false,
+              displayList: false,
+              rows: ["ou"],
+              columns: ["dx"],
+              legendSet: null,
+              styles: null
+            };
+            this.store.dispatch(loadEvents({ dimensions: dimensions }));
+            this.loadedEvents$ = this.store.select(getAllEventsData);
+            this.loadedEventEntities$ = this.store.select(
+              getEventsDataEntities
+            );
+            this.loadedEventEntities$.subscribe(entities => {
+              const key =
+                this.selectedOuId + "-" + "THIS_YEAR" + "-" + selectedFormId;
+              if (entities && entities[key]) {
+                this.tableObject = drawTable(
+                  entities[key]["data"] ? entities[key]["data"] : {},
+                  this.tableConfigurations,
+                  this.elementsToShow,
+                  this.selectedOuId
+                )[this.selectedOuId];
+              }
+            });
+          }
         }
       });
     });

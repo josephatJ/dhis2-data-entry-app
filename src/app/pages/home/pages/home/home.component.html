@@ -15,77 +15,127 @@
           <mat-tab-group>
             <mat-tab label="Data entry">
               <mat-chip-list aria-label="Fish selection">
-                <div class="row" style="width: 100%">
+                <div class="row" style="width: 100%; padding: 15px;">
                   <div class="col-md-12">
-                    <div class="type-of-form">
-                      <mat-radio-button (click)="setFormType('aggregate')"
-                        >Aggregate</mat-radio-button
-                      >
-                      <mat-radio-button (click)="setFormType('event')"
-                        >Event</mat-radio-button
-                      >
-                      <mat-radio-button (click)="setFormType('tracker')"
-                        >Tracker</mat-radio-button
-                      >
-                    </div>
-                    <div
-                      *ngIf="
-                        (formsInfoEntities$ | async) &&
-                        (isEvent || isAggregate || isTracker)
-                      "
-                      class="form-selection"
-                    >
-                      <select
-                        *ngIf="isEvent"
-                        class="form-control"
-                        (change)="
-                          getSelectedForm(
-                            $event.target.value,
-                            formsInfoEntities$
-                          )
-                        "
-                      >
-                        <option value="">Select form</option>
-                        <option
-                          *ngFor="
-                            let form of (formsInfoEntities$ | async)[
-                              selectedOuId
-                            ]
-                              ? (formsInfoEntities$ | async)[selectedOuId][
-                                  'programs'
-                                ]
-                              : []
-                          "
-                          [value]="form.id"
-                          >{{ form.name }}</option
+                    <div class="row">
+                      <div class="type-of-form col-md-3">
+                        <mat-radio-button (click)="setFormType('aggregate')"
+                          >Aggregate</mat-radio-button
                         >
-                      </select>
-                      <!-- Aggregate -->
-                      <select
-                        *ngIf="isAggregate"
-                        class="form-control"
-                        (change)="
-                          getSelectedForm(
-                            $event.target.value,
-                            formsInfoEntities$
-                          )
-                        "
-                      >
-                        <option value="">Select form</option>
-                        <option
-                          *ngFor="
-                            let form of (formsInfoEntities$ | async)[
-                              selectedOuId
-                            ]
-                              ? (formsInfoEntities$ | async)[selectedOuId][
-                                  'dataSets'
-                                ]
-                              : []
-                          "
-                          [value]="form.id"
-                          >{{ form.name }}</option
+                        <mat-radio-button (click)="setFormType('event')"
+                          >Event</mat-radio-button
                         >
-                      </select>
+                        <mat-radio-button (click)="setFormType('tracker')"
+                          >Tracker</mat-radio-button
+                        >
+                      </div>
+                      <div
+                        *ngIf="
+                          (formsInfoEntities$ | async) &&
+                          (isEvent || isAggregate || isTracker)
+                        "
+                        class="form-selection col-md-3"
+                      >
+                        <select
+                          style=""
+                          *ngIf="isEvent"
+                          class="form-control"
+                          (change)="getSelectedForm($event.target.value)"
+                        >
+                          <option value="">Select form</option>
+                          <option
+                            *ngFor="
+                              let form of (formsInfoEntities$ | async)[
+                                selectedOuId
+                              ]
+                                ? (formsInfoEntities$ | async)[selectedOuId][
+                                    'programs'
+                                  ]
+                                : []
+                            "
+                            [value]="form.id"
+                            >{{ form.name }}</option
+                          >
+                        </select>
+                        <!-- Aggregate -->
+                        <select
+                          style=""
+                          *ngIf="isAggregate"
+                          class="form-control"
+                          (change)="
+                            getSelectedAggregateForm($event.target.value)
+                          "
+                        >
+                          <option value="">Select form</option>
+                          <option
+                            *ngFor="
+                              let form of (formsInfoEntities$ | async)[
+                                selectedOuId
+                              ]
+                                ? (formsInfoEntities$ | async)[selectedOuId][
+                                    'dataSets'
+                                  ]
+                                : []
+                            "
+                            [value]="form.id"
+                            >{{ form.name }}</option
+                          >
+                        </select>
+                      </div>
+                      <div class="col-md-3">
+                        <select
+                          class="form-control"
+                          style="margin-top: 15px;"
+                          *ngIf="
+                            isAggregate &&
+                            formId &&
+                            (dataEntryConfigurations$ | async) &&
+                            (dataEntryConfigurations$ | async)[formId]
+                          "
+                          (change)="getFormAttribute($event.target.value)"
+                        >
+                          <option>Select</option>
+                          <option
+                            *ngFor="
+                              let attribute of (dataEntryConfigurations$
+                                | async)[formId]
+                                ? (dataEntryConfigurations$ | async)[formId][
+                                    'attributeCategory'
+                                  ]['categoryOptions']
+                                : []
+                            "
+                            [value]="attribute.id"
+                            >{{ attribute.name }}</option
+                          >
+                        </select>
+                      </div>
+                      <div class="col-md-2">
+                        <select
+                          class="form-control"
+                          style="margin-top: 15px;"
+                          *ngIf="
+                            isAggregate &&
+                            formId &&
+                            (dataEntryConfigurations$ | async) &&
+                            (dataEntryConfigurations$ | async)[formId]
+                          "
+                          (change)="getFormAttribute($event.target.value)"
+                        >
+                          <option>Select</option>
+                          <option
+                            *ngFor="
+                              let category of (dataEntryConfigurations$
+                                | async)[formId]
+                                ? (dataEntryConfigurations$ | async)[formId][
+                                    'category'
+                                  ]['categoryOptions']
+                                : []
+                            "
+                            [value]="category.id"
+                            >{{ category.name }}</option
+                          >
+                        </select>
+                      </div>
                     </div>
                     <div
                       style="width: 100%"
@@ -100,12 +150,12 @@
                         ></mat-progress-bar>
                       </div>
                     </div>
-                    <div style="width: 100%" *ngIf="!selectedFormReady"></div>
-                    <div *ngIf="selectedFormReady" style="margin-left: 10px;">
+                    <div *ngIf="selectedFormReady" style="margin-left: 6px;">
                       <ngx-dhis2-custom-forms-entry
                         [htmlCustomForm]="htmlCustomForm"
                         [dataElements]="dataElements"
                         [formType]="formType"
+                        [formId]="formId"
                         (onCustomFormInputChange)="
                           detailsOfTheChangedValue($event)
                         "
@@ -118,7 +168,6 @@
               </mat-chip-list>
             </mat-tab>
             <mat-tab label="Reports">
-              Reports
               <div *ngIf="loadedEvents$ | async">
                 <app-report-table
                   *ngIf="tableObject && tableObject['rows']"
