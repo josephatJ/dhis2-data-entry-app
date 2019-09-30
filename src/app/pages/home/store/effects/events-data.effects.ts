@@ -24,12 +24,7 @@ export class EventsDataEffects {
           map(data =>
             addLoadedEvents({
               eventsData: {
-                id:
-                  action.dimensions.ou +
-                  "-" +
-                  action.dimensions.pe +
-                  "-" +
-                  action.dimensions.program,
+                id: action.dimensions.ou + "-" + action.dimensions.stage,
                 data: data
               }
             })

@@ -11,16 +11,11 @@ export class EventsDataService {
   getEventsData(dimensions): Observable<any> {
     console.log("dimensions", dimensions);
     return this.httpClientService.get(
-      "analytics/events/query/" +
-        dimensions.program +
-        ".json?dimension=pe:" +
-        dimensions.pe +
-        "&dimension=ou:" +
+      "events/query.json?orgUnit=" +
         dimensions.ou +
-        dimensions.dx +
-        "&stage=" +
+        "&programStage=" +
         dimensions.stage +
-        "&displayProperty=NAME&outputType=EVENT&pageSize=100&page=1"
+        "&order=lastUpdated:desc&pageSize=50&page=1&totalPages=true"
     );
   }
 }

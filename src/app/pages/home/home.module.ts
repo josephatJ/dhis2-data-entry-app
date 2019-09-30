@@ -11,6 +11,10 @@ import { homeReducers } from "./store/reducers";
 import { EffectsModule } from "@ngrx/effects";
 import { FormsEffects, EventsDataEffects } from "./store/effects";
 import { ReportTableComponent } from "./pages/home/report-table/report-table.component";
+import { MatDatepickerModule } from "@angular/material/datepicker";
+import { MatIconModule } from "@angular/material/icon";
+import { MatNativeDateModule } from "@angular/material";
+import { NgxDhis2PeriodFilterModule } from "@iapps/ngx-dhis2-period-filter";
 
 @NgModule({
   declarations: [...pages, ReportTableComponent],
@@ -19,9 +23,13 @@ import { ReportTableComponent } from "./pages/home/report-table/report-table.com
     SharedModule,
     HomeRoutingModule,
     NgxDhis2OrgUnitFilterModule,
+    NgxDhis2PeriodFilterModule,
     NgxDhis2CustomFormsEntryModule,
     ...homeReducers,
-    EffectsModule.forFeature([FormsEffects, EventsDataEffects])
+    EffectsModule.forFeature([FormsEffects, EventsDataEffects]),
+    MatIconModule,
+    MatDatepickerModule,
+    MatNativeDateModule
   ]
 })
 export class HomeModule {}

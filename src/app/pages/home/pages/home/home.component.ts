@@ -70,7 +70,7 @@ export class HomeComponent implements OnInit {
     colorKey: ""
   };
   selectedFormReady: boolean = false;
-  selectedOuId: string;
+  selectedOuId: string = "";
   formsInfo$: Observable<any>;
   formsInfoEntities$: Observable<any>;
   loadedEvents$: Observable<any>;
@@ -85,17 +85,117 @@ export class HomeComponent implements OnInit {
   orgUnitFormsInfo$: Observable<any>;
   dataEntryConfigurations$: Observable<any>;
   formAttribute: string = "";
+  dataValues: Array<any> = [];
+  selectedProgramStage: string = "";
+  minDate = new Date(2000, 0, 1);
+  maxDate: any;
+  eventDate: string = "";
+  message: string = "";
+  title = "ngx-dhis2-period-filter";
+  periodObject: any;
+  periodFilterConfig: any = {
+    singleSelection: true,
+    emitOnSelection: false,
+    childrenPeriodSortOrder: "ASC"
+  };
+  selectedPeriodItems: any[] = [
+    {
+      id: "2019",
+      type: "Yearly",
+      name: "2019"
+    }
+  ];
 
   constructor(
     private _snackBar: MatSnackBar,
     private store: Store<State>,
     private httpClientService: NgxDhis2HttpClientService
   ) {
+    let today = new Date();
+    this.maxDate = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    );
     this.dataEntryConfigurations$ = this.httpClientService.get(
       "dataStore/data-entry/configurations"
     );
   }
   ngOnInit() {}
+
+  onPeriodUpdate(periodObject, action) {
+    console.log("periodObject", periodObject);
+    this.periodObject = periodObject;
+    this.action = action;
+    const dimensions = {
+      ou: this.selectedOuId,
+      program: this.formId,
+      stage: this.selectedProgramStage,
+      pe: periodObject["items"][0].id,
+      dx: ""
+    };
+    this.tableConfigurations = {
+      title: "",
+      subtitle: "",
+      showHierarchy: false,
+      displayList: false,
+      rows: ["ou"],
+      columns: ["dx"],
+      legendSet: null,
+      styles: null
+    };
+    this.store.dispatch(loadEvents({ dimensions: dimensions }));
+    this.loadedEvents$ = this.store.select(getAllEventsData);
+    this.loadedEventEntities$ = this.store.select(getEventsDataEntities);
+    this.loadedEventEntities$.subscribe(entities => {
+      const key = this.selectedOuId + "-" + "THIS_YEAR" + "-" + this.formId;
+      if (entities && entities[key]) {
+        this.tableObject = drawTable(
+          entities[key]["data"] ? entities[key]["data"] : {},
+          this.tableConfigurations,
+          this.elementsToShow,
+          this.selectedOuId
+        )[this.selectedOuId];
+        console.log("table object", this.tableObject);
+      }
+      this.selectedFormReady = false;
+    });
+  }
+
+  tabClick(e, formId, selectedProgramStage, selectedOuId) {
+    const dimensions = {
+      ou: this.selectedOuId,
+      program: this.formId,
+      stage: this.selectedProgramStage,
+      pe: "",
+      dx: ""
+    };
+    this.tableConfigurations = {
+      title: "",
+      subtitle: "",
+      showHierarchy: false,
+      displayList: false,
+      rows: ["ou"],
+      columns: ["dx"],
+      legendSet: null,
+      styles: null
+    };
+    this.store.dispatch(loadEvents({ dimensions: dimensions }));
+    this.loadedEvents$ = this.store.select(getAllEventsData);
+    this.loadedEventEntities$ = this.store.select(getEventsDataEntities);
+    this.loadedEventEntities$.subscribe(entities => {
+      const key = this.selectedOuId + "-" + this.selectedProgramStage;
+      if (entities && entities[key]) {
+        this.tableObject = drawTable(
+          entities[key]["data"] ? entities[key]["data"] : {},
+          this.tableConfigurations,
+          this.elementsToShow,
+          this.selectedOuId
+        )[this.selectedOuId];
+      }
+      this.selectedFormReady = false;
+    });
+  }
 
   openSnackBar() {
     this._snackBar.open("This is working", "OK", {
@@ -113,7 +213,7 @@ export class HomeComponent implements OnInit {
     this.orgUnitFormsInfo$ = this.httpClientService.get(
       "organisationUnits/" +
         e.items[0].id +
-        ".json?fields=id,name,dataSets[id,name,dataSetElements[dataElement[id,name,valueType,optionSetValue]],dataEntryForm[id,name,htmlCode]],programs[id,name,programStages[dataEntryForm[id,htmlCode],programStageDataElements[dataElement[id,name,code,valueType,optionSet[id,name,options[id,name,code]]]]]]"
+        ".json?fields=id,name,dataSets[id,name,dataSetElements[dataElement[id,name,valueType,optionSetValue]],dataEntryForm[id,name,htmlCode]],programs[id,name,programStages[id,dataEntryForm[id,htmlCode],programStageDataElements[dataElement[id,name,code,valueType,optionSet[id,name,options[id,name,code]]]]]]"
     );
   }
 
@@ -124,9 +224,66 @@ export class HomeComponent implements OnInit {
     this.statusUpdateOnDomElement.colorKey = "OK";
     this.statusUpdateOnDomElement.status = "synched";
     const newObject = {};
+    const index = _.findIndex(this.dataValues, valueObj => {
+      return _.isMatch(valueObj.dataElement, e.id.split("-")[0]);
+    });
+    console.log("index", index);
+    if (index > -1) {
+      this.dataValues[index] = {
+        dataElement: e.id.split("-")[0],
+        value: e.value
+      };
+    } else {
+      this.dataValues.push({ dataElement: e.id.split("-")[0], value: e.value });
+    }
     newObject[domElementId] = this.statusUpdateOnDomElement;
     this.statusArr.push(this.statusUpdateOnDomElement);
-    console.log("statusUpdateOnDomElement", e);
+  }
+
+  submit() {
+    let newObject = {
+      program: this.formId,
+      programStage: this.selectedProgramStage,
+      orgUnit: this.selectedOuId,
+      status: "ACTIVE",
+      eventDate: this.eventDate,
+      event: "",
+      dataValues: []
+    };
+    newObject.dataValues = this.dataValues;
+    console.log(newObject);
+    this.httpClientService.get("system/id.json").subscribe(ids => {
+      if (ids) {
+        newObject.event = ids.codes[0];
+        this.httpClientService.post("events", newObject).subscribe(message => {
+          console.log("message", message);
+          if (message["httpStatusCode"] == 200) {
+            this.message = "OK";
+            this.selectedFormReady = false;
+          } else {
+            this.message = "Failed";
+          }
+        });
+      }
+    });
+  }
+
+  setEventDate(date) {
+    this.eventDate =
+      this.formatDate(date.getFullYear().toString()) +
+      "-" +
+      this.formatDate(date.getMonth().toString()) +
+      "-" +
+      this.formatDate(date.getDate().toString());
+    this.selectedFormReady = true;
+  }
+
+  formatDate(pe) {
+    if (pe.length == 1) {
+      return "0" + pe;
+    } else {
+      return pe;
+    }
   }
 
   getSelectedAggregateForm(selectedFormId) {
@@ -138,8 +295,6 @@ export class HomeComponent implements OnInit {
           this.dataEntryConfigurations$.subscribe(entryConfigs => {
             if (entryConfigs && entryConfigs[selectedFormId]) {
               this.selectedFormReady = false;
-            } else {
-              this.selectedFormReady = true;
             }
           });
           this.formId = selectedFormId;
@@ -152,7 +307,6 @@ export class HomeComponent implements OnInit {
 
   getFormAttribute(attributeId) {
     this.formAttribute = attributeId;
-    this.selectedFormReady = true;
   }
 
   getSelectedForm(selectedFormId) {
@@ -161,57 +315,13 @@ export class HomeComponent implements OnInit {
       _.map(forms["programs"], (form: any) => {
         if (form.id == selectedFormId) {
           this.formId = selectedFormId;
+          this.selectedProgramStage = form["programStages"][0].id;
           this.htmlCustomForm = form["programStages"][0].dataEntryForm.htmlCode;
           this.dataElements = this.getDataElements(
             form["programStages"][0]["programStageDataElements"]
           );
-          this.selectedFormReady = true;
-          // load data for the selected form
-          let dxDimensionString = "&dimension=";
-          let checkCount = 0;
-          _.map(this.dataElements, dataElement => {
-            checkCount++;
-            if (checkCount < this.dataElements.length) {
-              dxDimensionString += dataElement.id + "&dimension=";
-            } else {
-              dxDimensionString += dataElement.id;
-            }
-          });
-          if (this.isEvent) {
-            const dimensions = {
-              ou: this.selectedOuId,
-              program: selectedFormId,
-              stage: form["programStages"][0].id,
-              pe: "THIS_YEAR",
-              dx: dxDimensionString
-            };
-            this.tableConfigurations = {
-              title: form.name,
-              subtitle: "",
-              showHierarchy: false,
-              displayList: false,
-              rows: ["ou"],
-              columns: ["dx"],
-              legendSet: null,
-              styles: null
-            };
-            this.store.dispatch(loadEvents({ dimensions: dimensions }));
-            this.loadedEvents$ = this.store.select(getAllEventsData);
-            this.loadedEventEntities$ = this.store.select(
-              getEventsDataEntities
-            );
-            this.loadedEventEntities$.subscribe(entities => {
-              const key =
-                this.selectedOuId + "-" + "THIS_YEAR" + "-" + selectedFormId;
-              if (entities && entities[key]) {
-                this.tableObject = drawTable(
-                  entities[key]["data"] ? entities[key]["data"] : {},
-                  this.tableConfigurations,
-                  this.elementsToShow,
-                  this.selectedOuId
-                )[this.selectedOuId];
-              }
-            });
+          if (this.eventDate !== "") {
+            this.selectedFormReady = true;
           }
         }
       });

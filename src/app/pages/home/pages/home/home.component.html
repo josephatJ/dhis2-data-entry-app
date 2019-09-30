@@ -12,7 +12,11 @@
       </div>
       <div class="col-md-10">
         <div class="reports-and-data-entry">
-          <mat-tab-group>
+          <mat-tab-group
+            (selectedTabChange)="
+              tabClick($event, formId, selectedProgramStage, selectedOuId)
+            "
+          >
             <mat-tab label="Data entry">
               <mat-chip-list aria-label="Fish selection">
                 <div class="row" style="width: 100%; padding: 15px;">
@@ -82,12 +86,11 @@
                           >
                         </select>
                       </div>
-                      <div class="col-md-3">
+                      <div class="col-md-3" *ngIf="isAggregate">
                         <select
                           class="form-control"
                           style="margin-top: 15px;"
                           *ngIf="
-                            isAggregate &&
                             formId &&
                             (dataEntryConfigurations$ | async) &&
                             (dataEntryConfigurations$ | async)[formId]
@@ -109,12 +112,11 @@
                           >
                         </select>
                       </div>
-                      <div class="col-md-2">
+                      <div class="col-md-2" *ngIf="isAggregate">
                         <select
                           class="form-control"
                           style="margin-top: 15px;"
                           *ngIf="
-                            isAggregate &&
                             formId &&
                             (dataEntryConfigurations$ | async) &&
                             (dataEntryConfigurations$ | async)[formId]
@@ -135,6 +137,23 @@
                             >{{ category.name }}</option
                           >
                         </select>
+                      </div>
+                      <div class="col-md-2" *ngIf="formId">
+                        <mat-form-field class="example-full-width">
+                          <input
+                            (dateChange)="setEventDate($event.target.value)"
+                            matInput
+                            [min]="minDate"
+                            [max]="maxDate"
+                            [matDatepicker]="picker"
+                            placeholder="Choose a date"
+                          />
+                          <mat-datepicker-toggle
+                            matSuffix
+                            [for]="picker"
+                          ></mat-datepicker-toggle>
+                          <mat-datepicker #picker></mat-datepicker>
+                        </mat-form-field>
                       </div>
                     </div>
                     <div
@@ -163,11 +182,39 @@
                       >
                       </ngx-dhis2-custom-forms-entry>
                     </div>
+                    <br />
+                    <div *ngIf="selectedFormReady">
+                      <button
+                        mat-flat-button
+                        color="primary"
+                        (click)="submit()"
+                      >
+                        Save
+                      </button>
+                      <div
+                        *ngIf="message !== ''"
+                        style="margin-left: 15px; display: inline;"
+                      >
+                        <h5>{{ message }}</h5>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </mat-chip-list>
             </mat-tab>
-            <mat-tab label="Reports">
+            <mat-tab label="Report">
+              <!-- <div class="row">
+                <div class="col-md-4" *ngIf="selectedOuId !== ''">
+                  <ngx-dhis2-period-filter
+                    [selectedPeriods]="selectedPeriodItems"
+                    [periodFilterConfig]="periodFilterConfig"
+                    [lowestPeriodType]="'Monthly'"
+                    (update)="onPeriodUpdate($event, 'UPDATE')"
+                    (change)="onPeriodUpdate($event, 'CHANGE')"
+                    (close)="onPeriodUpdate($event, 'CLOSE')"
+                  ></ngx-dhis2-period-filter>
+                </div>
+              </div> -->
               <div *ngIf="loadedEvents$ | async">
                 <app-report-table
                   *ngIf="tableObject && tableObject['rows']"
